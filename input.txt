@@ -7,3 +7,15 @@
 [bishop, e, 2].
 [b, 5].
 [knight, d, 2].
+[a, 5].
+[a, 4].
+[c, 5].
+[a, x, b, 5].
+[knight, c, 6].
+[b, x, c, 6].
+[rook, a, 6].
+[knight, c, 4].
+[a, 4].
+[c, 3].
+[a, 3].
+[knight, x, a, 3].

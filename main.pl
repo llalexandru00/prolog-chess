@@ -43,6 +43,9 @@ col_trans(h, 8).
 opposite(white, black).
 opposite(black, white).
 
+adjacent(A, B) :- up(A, B).
+adjacent(A, B) :- up(B, A).
+
 
 % CHECK IF THE (C, L) CELL HAS NO PIECE IN IT
 empty(Board, C, L) :- 
@@ -74,6 +77,13 @@ move_piece(Turn, Piece, A, B, X, Y, Before, After) :-
   add_piece(Turn, Piece, X, Y, Middle, After)
 .
 
+%% THIS CAPTURES A PIECE FROM ONE LOCATION AND MOVES A PIECE TO THAT LOCATION
+%% THIS SHOULD BE GUARDED BY A CAN CAPTURE PREDICATE
+capture(Turn, Piece, A, B, X, Y, Before, After) :- 
+  remove_piece(A, B, Before, Middle),
+  remove_piece(X, Y, Middle, Middle2),
+  add_piece(Turn, Piece, X, Y, Middle2, After)
+.
 
 % PREDICATES TO CHECK IF WE CAN MOVE A PAWN TO A SPECIFIC LOCATION
 % THERE ARE 2 TRIES FOR SIMPLE MOVES: ONE TO HANDLE ONE STEP FORWARD AND 
@@ -103,7 +113,6 @@ can_move(black, pawn, C, 5, Board, C, 7, 2) :-
   exists(black, pawn, Board, C, 7)
 .
 
-
 % PREDICATES TO CHECK IF WE CAN MOVE A KNIGHT TO A SPECIFIC LOCATION
 % THERE ARE 8 DIRECTION FROM WHICH A KNIGHT CAN MOVE
 % WE NEED TO CHECK ONLY IF THE DESTINATION IS EMPTY AS THE KNIGHT AVOIDS COLISION
@@ -112,7 +121,6 @@ can_move(Turn, knight, C, L, Board, C2, L2, 1) :-
   up(L, TL),
   up(TL, L2),
   up(C2, C),
-  empty(Board, C, L),
   exists(Turn, knight, Board, C2, L2)
 .
 
@@ -120,7 +128,6 @@ can_move(Turn, knight, C, L, Board, C2, L2, 2) :-
   up(L, L2),
   up(TC, C),
   up(C2, TC),
-  empty(Board, C, L),
   exists(Turn, knight, Board, C2, L2)
 .
 
@@ -128,7 +135,6 @@ can_move(Turn, knight, C, L, Board, C2, L2, 3) :-
   up(L2, L),
   up(TC, C),
   up(C2, TC),
-  empty(Board, C, L),
   exists(Turn, knight, Board, C2, L2)
 .
 
@@ -136,7 +142,6 @@ can_move(Turn, knight, C, L, Board, C2, L2, 4) :-
   up(TL, L),
   up(L2, TL),
   up(C2, C),
-  empty(Board, C, L),
   exists(Turn, knight, Board, C2, L2)
 .
 
@@ -144,7 +149,6 @@ can_move(Turn, knight, C, L, Board, C2, L2, 5) :-
   up(TL, L),
   up(L2, TL),
   up(C, C2),
-  empty(Board, C, L),
   exists(Turn, knight, Board, C2, L2)
 .
 
@@ -152,7 +156,6 @@ can_move(Turn, knight, C, L, Board, C2, L2, 6) :-
   up(L2, L),
   up(C, TC),
   up(TC, C2),
-  empty(Board, C, L),
   exists(Turn, knight, Board, C2, L2)
 .
 
@@ -160,7 +163,6 @@ can_move(Turn, knight, C, L, Board, C2, L2, 7) :-
   up(L, L2),
   up(C, TC),
   up(TC, C2),
-  empty(Board, C, L),
   exists(Turn, knight, Board, C2, L2)
 .
 
@@ -168,13 +170,12 @@ can_move(Turn, knight, C, L, Board, C2, L2, 8) :-
   up(L, TL),
   up(TL, L2),
   up(C, C2),
-  empty(Board, C, L),
   exists(Turn, knight, Board, C2, L2)
 .
 
 
 % PREDICATES TO CHECK IF WE CAN MOVE A BISHOP TO A SPECIFIC LOCATION
-% THERE ARE 4 DIRECTIONS FROM WHICH A BISHOP CAN COME THUS WE WILL HAVE
+% THERE ARE 4 DIRECTIONS TO WHICH A BISHOP CAN COME THUS WE WILL HAVE
 % 8 CASES, DUE TO THE FACT THAT WE HAVE ONE BASIC STEP AND ONE RECURSIVE STEP
 % WE SHOULD MAKE SURE THAT THE PATH BETWEEN SOURCE AND DESTINATION IS CLEAR
 % 1 is NW, 2 is SW, 3 is SE, 4 is NE
@@ -234,6 +235,78 @@ can_move(Turn, bishop, C, L, Board, X, Y, 4, 2) :-
   can_move(Turn, bishop, C2, L2, Board, X, Y, 4, _)
 .
 
+% PREDICATES TO CHECK IF WE CAN MOVE A ROOK TO A SPECIFIC LOCATION
+% THERE ARE 4 DIRECTIONS TO WHICH A ROOK CAN COME THUS WE WILL HAVE
+% 8 CASES, DUE TO THE FACT THAT WE HAVE ONE BASIC STEP AND ONE RECURSIVE STEP
+% WE SHOULD MAKE SURE THAT THE PATH BETWEEN SOURCE AND DESTINATION IS CLEAR
+% 1 is N, 2 is E, 3 is S, 4 is W
+can_move(Turn, rook, C, L, Board, C, L2, 1, 1) :-
+  up(L, L2),
+  empty(Board, C, L),
+  exists(Turn, rook, Board, C, L2)
+.
+
+can_move(Turn, rook, C, L, Board, X, Y, 1, 2) :-
+  up(L, L2),
+  empty(Board, C, L),
+  can_move(Turn, rook, C, L2, Board, X, Y, 1, _)
+.
+
+can_move(Turn, rook, C, L, Board, C2, L, 2, 1) :-
+  up(C, C2),
+  empty(Board, C, L),
+  exists(Turn, rook, Board, C2, L)
+.
+
+can_move(Turn, rook, C, L, Board, X, Y, 2, 2) :-
+  up(C, C2),
+  empty(Board, C, L),
+  can_move(Turn, rook, C2, L, Board, X, Y, 2, _)
+.
+
+can_move(Turn, rook, C, L, Board, C, L2, 3, 1) :-
+  up(L2, L),
+  empty(Board, C, L),
+  exists(Turn, rook, Board, C, L2)
+.
+
+can_move(Turn, rook, C, L, Board, X, Y, 3, 2) :-
+  up(L2, L),
+  empty(Board, C, L),
+  can_move(Turn, rook, C, L2, Board, X, Y, 3, _)
+.
+
+can_move(Turn, rook, C, L, Board, C2, L, 4, 1) :-
+  up(C2, C),
+  empty(Board, C, L),
+  exists(Turn, rook, Board, C2, L)
+.
+
+can_move(Turn, rook, C, L, Board, X, Y, 4, 2) :-
+  up(C2, C),
+  empty(Board, C, L),
+  can_move(Turn, rook, C2, L, Board, X, Y, 4, _)
+.
+
+
+% PREDICATES TO CHECK IF A PAWN CAN CAPTURE AT A SPECIFIC LOCATION
+can_capture(white, pawn, C, C2, L2, Board, C, L) :-
+  up(L, L2),
+  adjacent(C, C2),
+  \+ empty(Board, C2, L2),
+  exists(white, pawn, Board, C, L)
+.
+
+can_capture(black, pawn, C, C2, L2, Board, C, L) :-
+  up(L2, L),
+  adjacent(C, C2),
+  \+ empty(Board, C2, L2),
+  exists(black, pawn, Board, C, L)
+.
+
+can_capture(Turn, knight, C, L, Before, X, Y) :- 
+  can_move(Turn, knight, C, L, Before, X, Y, _)
+.
 
 % MOVE A PAWN
 make_move([C, L], Before, After, Turn) :-
@@ -252,8 +325,31 @@ make_move([bishop, C, L], Before, After, Turn) :-
 % MOVE A KNIGHT
 make_move([knight, C, L], Before, After, Turn) :-
   col_trans(C, NC),
+  empty(Before, NC, L),
   can_move(Turn, knight, NC, L, Before, X, Y, _),
   move_piece(Turn, knight, X, Y, NC, L, Before, After)
+.
+
+% MOVE A ROOK
+make_move([rook, C, L], Before, After, Turn) :-
+  col_trans(C, NC),
+  can_move(Turn, rook, NC, L, Before, X, Y, _, _),
+  move_piece(Turn, rook, X, Y, NC, L, Before, After)
+.
+
+% CAPTURE WITH A PAWN
+make_move([C, x, C2, L], Before, After, Turn) :-
+  col_trans(C, NC),
+  col_trans(C2, NC2),
+  can_capture(Turn, pawn, NC, NC2, L, Before, X, Y),
+  capture(Turn, pawn, X, Y, NC2, L, Before, After)
+.
+
+% CAPTURE WITH A KNIGHT
+make_move([knight, x, C, L], Before, After, Turn) :-
+  col_trans(C, NC),
+  can_capture(Turn, knight, NC, L, Before, X, Y),
+  capture(Turn, knight, X, Y, NC, L, Before, After)
 .
 
 % ITERATE THE LIST OF MOVES

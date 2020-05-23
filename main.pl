@@ -1,3 +1,4 @@
+% GENERATE INITIAL BOARD 
 piece(white, rook,   1, 1).
 piece(white, knight, 2, 1).
 piece(white, bishop, 3, 1).
@@ -23,6 +24,7 @@ piece(black, pawn,   X, 7) :-
 initial_board(Board) :-
   findall(piece(A, B, C, D), piece(A, B, C, D), Board).
 
+% DETECT WHICH CELLS ARE ONE-WAY ADJACENT
 up(1, 2).
 up(2, 3).
 up(3, 4).
@@ -31,6 +33,7 @@ up(5, 6).
 up(6, 7).
 up(7, 8).
 
+% TRANSFORMATION FROM STANDARD CHARACTER NOTATION TO INTEGER NOTATION
 col_trans(a, 1).
 col_trans(b, 2).
 col_trans(c, 3).
@@ -40,9 +43,11 @@ col_trans(f, 6).
 col_trans(g, 7).
 col_trans(h, 8).
 
+% DEFINE HOW TURNS ARE CHANGED
 opposite(white, black).
 opposite(black, white).
 
+% DETECT WHICH CELLS ARE TWO-WAY ADJACENT
 adjacent(A, B) :- up(A, B).
 adjacent(A, B) :- up(B, A).
 
@@ -175,7 +180,7 @@ can_move(Turn, knight, C, L, Board, C2, L2, 8) :-
 
 
 % PREDICATES TO CHECK IF WE CAN MOVE A BISHOP TO A SPECIFIC LOCATION
-% THERE ARE 4 DIRECTIONS TO WHICH A BISHOP CAN COME THUS WE WILL HAVE
+% THERE ARE 4 DIRECTIONS FROM WHICH A BISHOP CAN COME THUS WE WILL HAVE
 % 8 CASES, DUE TO THE FACT THAT WE HAVE ONE BASIC STEP AND ONE RECURSIVE STEP
 % WE SHOULD MAKE SURE THAT THE PATH BETWEEN SOURCE AND DESTINATION IS CLEAR
 % 1 is NW, 2 is SW, 3 is SE, 4 is NE
@@ -236,7 +241,7 @@ can_move(Turn, bishop, C, L, Board, X, Y, 4, 2) :-
 .
 
 % PREDICATES TO CHECK IF WE CAN MOVE A ROOK TO A SPECIFIC LOCATION
-% THERE ARE 4 DIRECTIONS TO WHICH A ROOK CAN COME THUS WE WILL HAVE
+% THERE ARE 4 DIRECTIONS FROM WHICH A ROOK CAN COME THUS WE WILL HAVE
 % 8 CASES, DUE TO THE FACT THAT WE HAVE ONE BASIC STEP AND ONE RECURSIVE STEP
 % WE SHOULD MAKE SURE THAT THE PATH BETWEEN SOURCE AND DESTINATION IS CLEAR
 % 1 is N, 2 is E, 3 is S, 4 is W
@@ -288,6 +293,122 @@ can_move(Turn, rook, C, L, Board, X, Y, 4, 2) :-
   can_move(Turn, rook, C2, L, Board, X, Y, 4, _)
 .
 
+% PREDICATES TO CHECK IF WE CAN MOVE A QUEEN TO A SPECIFIC LOCATION
+% THERE ARE 8 DIRECTIONS FROM WHICH A QUEEN CAN COME THUS WE WILL HAVE
+% 16 CASES, DUE TO THE FACT THAT WE HAVE ONE BASIC STEP AND ONE RECURSIVE STEP
+% WE SHOULD MAKE SURE THAT THE PATH BETWEEN SOURCE AND DESTINATION IS CLEAR
+% 1 IS FOR ROOK MOVES 2 IS FOR BISHOP MOVES
+% 1 is N, 2 is E, 3 is S, 4 is W IN CASE OF ROOK MOVES
+% 1 is NW, 2 is SW, 3 is SE, 4 is NE IN CASE OF BISHOP MOVES
+can_move(Turn, queen, C, L, Board, C, L2, 1, 1, 1) :-
+  up(L, L2),
+  empty(Board, C, L),
+  exists(Turn, queen, Board, C, L2)
+.
+
+can_move(Turn, queen, C, L, Board, X, Y, 1, 2, 1) :-
+  up(L, L2),
+  empty(Board, C, L),
+  can_move(Turn, queen, C, L2, Board, X, Y, 1, _, 1)
+.
+
+can_move(Turn, queen, C, L, Board, C2, L, 2, 1, 1) :-
+  up(C, C2),
+  empty(Board, C, L),
+  exists(Turn, queen, Board, C2, L)
+.
+
+can_move(Turn, queen, C, L, Board, X, Y, 2, 2, 1) :-
+  up(C, C2),
+  empty(Board, C, L),
+  can_move(Turn, queen, C2, L, Board, X, Y, 2, _, 1)
+.
+
+can_move(Turn, queen, C, L, Board, C, L2, 3, 1, 1) :-
+  up(L2, L),
+  empty(Board, C, L),
+  exists(Turn, queen, Board, C, L2)
+.
+
+can_move(Turn, queen, C, L, Board, X, Y, 3, 2, 1) :-
+  up(L2, L),
+  empty(Board, C, L),
+  can_move(Turn, queen, C, L2, Board, X, Y, 3, _, 1)
+.
+
+can_move(Turn, queen, C, L, Board, C2, L, 4, 1, 1) :-
+  up(C2, C),
+  empty(Board, C, L),
+  exists(Turn, queen, Board, C2, L)
+.
+
+can_move(Turn, queen, C, L, Board, X, Y, 4, 2, 1) :-
+  up(C2, C),
+  empty(Board, C, L),
+  can_move(Turn, queen, C2, L, Board, X, Y, 4, _, 1)
+.
+
+can_move(Turn, queen, C, L, Board, C2, L2, 1, 1, 2) :-
+  up(C2, C),
+  up(L, L2),
+  empty(Board, C, L),
+  exists(Turn, queen, Board, C2, L2)
+.
+
+can_move(Turn, queen, C, L, Board, X, Y, 1, 2, 2) :-
+  up(C2, C),
+  up(L, L2),
+  empty(Board, C, L),
+  can_move(Turn, queen, C2, L2, Board, X, Y, 1, _, 2)
+.
+
+can_move(Turn, queen, C, L, Board, C2, L2, 2, 1, 2) :-
+  up(C2, C),
+  up(L2, L),
+  empty(Board, C, L),
+  exists(Turn, queen, Board, C2, L2)
+.
+
+can_move(Turn, queen, C, L, Board, X, Y, 2, 2, 2) :-
+  up(C2, C),
+  up(L2, L),
+  empty(Board, C, L),
+  can_move(Turn, queen, C2, L2, Board, X, Y, 2, _, 2)
+.
+
+can_move(Turn, queen, C, L, Board, C2, L2, 3, 1, 2) :-
+  up(C, C2),
+  up(L2, L),
+  empty(Board, C, L),
+  exists(Turn, queen, Board, C2, L2)
+.
+
+can_move(Turn, queen, C, L, Board, X, Y, 3, 2, 2) :-
+  up(C, C2),
+  up(L2, L),
+  empty(Board, C, L),
+  can_move(Turn, queen, C2, L2, Board, X, Y, 3, _, 2)
+.
+
+can_move(Turn, queen, C, L, Board, C2, L2, 4, 1, 2) :-
+  up(C, C2),
+  up(L, L2),
+  empty(Board, C, L),
+  exists(Turn, queen, Board, C2, L2)
+.
+
+can_move(Turn, queen, C, L, Board, X, Y, 4, 2, 2) :-
+  up(C, C2),
+  up(L, L2),
+  empty(Board, C, L),
+  can_move(Turn, queen, C2, L2, Board, X, Y, 4, _)
+.
+
+
+% PREDICATES TO CHECK IF A KNIGHT CAN CAPTURE AT A SPECIFIC LOCATION
+can_capture(Turn, knight, C, L, Board, X, Y) :- 
+  can_move(Turn, knight, C, L, Board, X, Y, _)
+.
 
 % PREDICATES TO CHECK IF A PAWN CAN CAPTURE AT A SPECIFIC LOCATION
 can_capture(white, pawn, C, C2, L2, Board, C, L) :-
@@ -304,8 +425,215 @@ can_capture(black, pawn, C, C2, L2, Board, C, L) :-
   exists(black, pawn, Board, C, L)
 .
 
-can_capture(Turn, knight, C, L, Before, X, Y) :- 
-  can_move(Turn, knight, C, L, Before, X, Y, _)
+% PREDICATES TO CHECK IF A ROOK CAN CAPTURE AT A SPECIFIC LOCATION
+can_capture(Turn, rook, C, L, Board, X, Y, 1, 1) :- 
+  \+ empty(Board, C, L),
+  up(L, L2),
+  can_move(Turn, rook, C, L2, Board, X, Y, 1, _)
+.
+
+can_capture(Turn, rook, C, L, Board, C, L2, 1, 2) :- 
+  \+ empty(Board, C, L),
+  up(L, L2),
+  exists(Turn, rook, Board, C, L2)
+.
+
+can_capture(Turn, rook, C, L, Board, X, Y, 2, 1) :- 
+  \+ empty(Board, C, L),
+  up(C, C2),
+  can_move(Turn, rook, C2, L, Board, X, Y, 2, _)
+.
+
+can_capture(Turn, rook, C, L, Board, C2, L, 2, 2) :- 
+  \+ empty(Board, C, L),
+  up(C, C2),
+  exists(Turn, rook, Board, C2, L)
+.
+
+can_capture(Turn, rook, C, L, Board, X, Y, 3, 1) :- 
+  \+ empty(Board, C, L),
+  up(L2, L),
+  can_move(Turn, rook, C, L2, Board, X, Y, 3, _)
+.
+
+can_capture(Turn, rook, C, L, Board, C, L2, 3, 2) :- 
+  \+ empty(Board, C, L),
+  up(L2, L),
+  exists(Turn, rook, Board, C, L2)
+.
+
+can_capture(Turn, rook, C, L, Board, X, Y, 4, 1) :- 
+  \+ empty(Board, C, L),
+  up(C2, C),
+  can_move(Turn, rook, C2, L, Board, X, Y, 4, _)
+.
+
+can_capture(Turn, rook, C, L, Board, C2, L, 4, 2) :- 
+  \+ empty(Board, C, L),
+  up(C2, C),
+  exists(Turn, rook, Board, C2, L)
+.
+
+% PREDICATES TO CHECK IF A BISHOP CAN CAPTURE AT A SPECIFIC LOCATION
+can_capture(Turn, bishop, C, L, Board, X, Y, 1, 1) :- 
+  \+ empty(Board, C, L),
+  up(C2, C),
+  up(L, L2),
+  can_move(Turn, bishop, C2, L2, Board, X, Y, 1, _)
+.
+
+can_capture(Turn, bishop, C, L, Board, C2, L2, 1, 2) :- 
+  \+ empty(Board, C, L),
+  up(C2, C),
+  up(L, L2),
+  exists(Turn, bishop, Board, C2, L2)
+.
+
+can_capture(Turn, bishop, C, L, Board, X, Y, 2, 1) :- 
+  \+ empty(Board, C, L),
+  up(C2, C),
+  up(L2, L),
+  can_move(Turn, bishop, C2, L2, Board, X, Y, 2, _)
+.
+
+can_capture(Turn, bishop, C, L, Board, C2, L2, 2, 2) :- 
+  \+ empty(Board, C, L),
+  up(C2, C),
+  up(L2, L),
+  exists(Turn, bishop, Board, C2, L2)
+.
+
+can_capture(Turn, bishop, C, L, Board, X, Y, 3, 1) :- 
+  \+ empty(Board, C, L),
+  up(C, C2),
+  up(L2, L),
+  can_move(Turn, bishop, C2, L2, Board, X, Y, 3, _)
+.
+
+can_capture(Turn, bishop, C, L, Board, C2, L2, 3, 2) :- 
+  \+ empty(Board, C, L),
+  up(C, C2),
+  up(L2, L),
+  exists(Turn, bishop, Board, C2, L2)
+.
+
+can_capture(Turn, bishop, C, L, Board, X, Y, 4, 1) :- 
+  \+ empty(Board, C, L),
+  up(C, C2),
+  up(L, L2),
+  can_move(Turn, bishop, C2, L2, Board, X, Y, 4, _)
+.
+
+can_capture(Turn, bishop, C, L, Board, C2, L2, 4, 2) :- 
+  \+ empty(Board, C, L),
+  up(C, C2),
+  up(L, L2),
+  exists(Turn, bishop, Board, C2, L2)
+.
+
+% PREDICATES TO CHECK IF A QUEEN CAN CAPTURE AT A SPECIFIC LOCATION
+can_capture(Turn, queen, C, L, Board, X, Y, 1, 1, 1) :- 
+  \+ empty(Board, C, L),
+  up(L, L2),
+  can_move(Turn, queen, C, L2, Board, X, Y, 1, _, 1)
+.
+
+can_capture(Turn, queen, C, L, Board, C, L2, 1, 2, 1) :- 
+  \+ empty(Board, C, L),
+  up(L, L2),
+  exists(Turn, queen, Board, C, L2)
+.
+
+can_capture(Turn, queen, C, L, Board, X, Y, 2, 1, 1) :- 
+  \+ empty(Board, C, L),
+  up(C, C2),
+  can_move(Turn, queen, C2, L, Board, X, Y, 2, _, 1)
+.
+
+can_capture(Turn, queen, C, L, Board, C2, L, 2, 2, 1) :- 
+  \+ empty(Board, C, L),
+  up(C, C2),
+  exists(Turn, queen, Board, C2, L)
+.
+
+can_capture(Turn, queen, C, L, Board, X, Y, 3, 1, 1) :- 
+  \+ empty(Board, C, L),
+  up(L2, L),
+  can_move(Turn, queen, C, L2, Board, X, Y, 3, _, 1)
+.
+
+can_capture(Turn, queen, C, L, Board, C, L2, 3, 2, 1) :- 
+  \+ empty(Board, C, L),
+  up(L2, L),
+  exists(Turn, queen, Board, C, L2)
+.
+
+can_capture(Turn, queen, C, L, Board, X, Y, 4, 1, 1) :- 
+  \+ empty(Board, C, L),
+  up(C2, C),
+  can_move(Turn, queen, C2, L, Board, X, Y, 4, _, 1)
+.
+
+can_capture(Turn, queen, C, L, Board, C2, L, 4, 2, 1) :- 
+  \+ empty(Board, C, L),
+  up(C2, C),
+  exists(Turn, queen, Board, C2, L)
+.
+
+can_capture(Turn, queen, C, L, Board, X, Y, 1, 1, 2) :- 
+  \+ empty(Board, C, L),
+  up(C2, C),
+  up(L, L2),
+  can_move(Turn, queen, C2, L2, Board, X, Y, 1, _, 2)
+.
+
+can_capture(Turn, queen, C, L, Board, C2, L2, 1, 2, 2) :- 
+  \+ empty(Board, C, L),
+  up(C2, C),
+  up(L, L2),
+  exists(Turn, queen, Board, C2, L2)
+.
+
+can_capture(Turn, queen, C, L, Board, X, Y, 2, 1, 2) :- 
+  \+ empty(Board, C, L),
+  up(C2, C),
+  up(L2, L),
+  can_move(Turn, queen, C2, L2, Board, X, Y, 2, _, 2)
+.
+
+can_capture(Turn, queen, C, L, Board, C2, L2, 2, 2, 2) :- 
+  \+ empty(Board, C, L),
+  up(C2, C),
+  up(L2, L),
+  exists(Turn, queen, Board, C2, L2)
+.
+
+can_capture(Turn, queen, C, L, Board, X, Y, 3, 1, 2) :- 
+  \+ empty(Board, C, L),
+  up(C, C2),
+  up(L2, L),
+  can_move(Turn, queen, C2, L2, Board, X, Y, 3, _, 2)
+.
+
+can_capture(Turn, queen, C, L, Board, C2, L2, 3, 2, 2) :- 
+  \+ empty(Board, C, L),
+  up(C, C2),
+  up(L2, L),
+  exists(Turn, queen, Board, C2, L2)
+.
+
+can_capture(Turn, queen, C, L, Board, X, Y, 4, 1, 2) :- 
+  \+ empty(Board, C, L),
+  up(C, C2),
+  up(L, L2),
+  can_move(Turn, queen, C2, L2, Board, X, Y, 4, _, 2)
+.
+
+can_capture(Turn, queen, C, L, Board, C2, L2, 4, 2, 2) :- 
+  \+ empty(Board, C, L),
+  up(C, C2),
+  up(L, L2),
+  exists(Turn, queen, Board, C2, L2)
 .
 
 % MOVE A PAWN
@@ -337,6 +665,14 @@ make_move([rook, C, L], Before, After, Turn) :-
   move_piece(Turn, rook, X, Y, NC, L, Before, After)
 .
 
+% MOVE A QUEEN
+make_move([queen, C, L], Before, After, Turn) :-
+  col_trans(C, NC),
+  can_move(Turn, queen, NC, L, Before, X, Y, _, _, _),
+  capture(Turn, queen, X, Y, NC, L, Before, After)
+.
+
+
 % CAPTURE WITH A PAWN
 make_move([C, x, C2, L], Before, After, Turn) :-
   col_trans(C, NC),
@@ -351,6 +687,21 @@ make_move([knight, x, C, L], Before, After, Turn) :-
   can_capture(Turn, knight, NC, L, Before, X, Y),
   capture(Turn, knight, X, Y, NC, L, Before, After)
 .
+
+% CAPTURE WITH A ROOK
+make_move([rook, x, C, L], Before, After, Turn) :-
+  col_trans(C, NC),
+  can_capture(Turn, rook, NC, L, Before, X, Y, _, _),
+  capture(Turn, rook, X, Y, NC, L, Before, After)
+.
+
+% CAPTURE WITH A QUEEN
+make_move([queen, x, C, L], Before, After, Turn) :-
+  col_trans(C, NC),
+  can_capture(Turn, queen, NC, L, Before, X, Y, _, _, _),
+  capture(Turn, queen, X, Y, NC, L, Before, After)
+.
+
 
 % ITERATE THE LIST OF MOVES
 make_moves([], Before, Before, _).

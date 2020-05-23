@@ -19,3 +19,12 @@
 [c, 3].
 [a, 3].
 [knight, x, a, 3].
+[rook, x, a, 3].
+[rook, x, a, 3].
+[c, 4].
+[d, x, c, 4].
+[d, 5].
+[c, x, d, 5].
+[queen, x, d, 5].
+[e, x, d, 5].
+[bishop, e, 6].

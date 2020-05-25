@@ -28,3 +28,34 @@
 [queen, x, d, 5].
 [e, x, d, 5].
 [bishop, e, 6].
+[rook, a, 8, chess].
+[king, e, 7].
+[bishop, c, 5, chess].
+[king, f, 6].
+[bishop, x, f, 8].
+[king, g, 6].
+[bishop, x, g, 7].
+[king, x, g, 7].
+[d, x, e, 6].
+[king, h, 6].
+[e, x, f, 7].
+[knight, f, 6].
+[rook, x, h, 8].
+[knight, h, 5].
+[bishop, x, h, 5].
+[king, g, 5].
+[rook, x, h, 7].
+[king, f, 5].
+[queen, f, 3, chess].
+[king, e, 6].
+[bishop, g, 4, chess].
+[king, d, 6].
+[rook, h, 6, chess].
+[king, c, 5].
+[queen, e, 3, chess].
+[king, b, 5].
+[c, 4, chess].
+[king, b, 4].
+[queen, c, 3, chess].
+[king, a, 4].
+[bishop, d, 1, chess].

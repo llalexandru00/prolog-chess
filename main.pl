@@ -51,7 +51,6 @@ opposite(black, white).
 adjacent(A, B) :- up(A, B).
 adjacent(A, B) :- up(B, A).
 
-
 % CHECK IF THE (C, L) CELL HAS NO PIECE IN IT
 empty(Board, C, L) :- 
   \+(member(piece(_, _, C, L), Board))
@@ -89,6 +88,99 @@ capture(Turn, Piece, A, B, X, Y, Before, After) :-
   remove_piece(X, Y, Middle, Middle2),
   add_piece(Turn, Piece, X, Y, Middle2, After)
 .
+
+% THIS IS USED TO FIND THE KING OF A SPECIFIC COLOR
+find_king(Board, Turn, C, L) :-
+  member(piece(Turn, king, C, L), Board)
+.
+
+% CHECK IF A PLAYER IS IN CHESS
+in_chess(Board, Turn) :-
+  find_king(Board, Turn, C, L),
+  opposite(Turn, Next),
+  can_capture(Next, _, C, L, Board, _, _)
+.
+
+% INTERFACE PREDICATES TO MOVE A PIECE NO MATTER THE STRATEGY
+can_move(Turn, pawn, C, L, Board, C2, L2) :-
+  can_move(Turn, pawn, C, L, Board, C2, L2, _)
+.
+
+can_move(Turn, knight, C, L, Board, C2, L2) :-
+  can_move(Turn, knight, C, L, Board, C2, L2, _)
+.
+
+can_move(Turn, bishop, C, L, Board, C2, L2) :-
+  can_move(Turn, bishop, C, L, Board, C2, L2, _, _)
+.
+
+can_move(Turn, rook, C, L, Board, C2, L2) :-
+  can_move(Turn, rook, C, L, Board, C2, L2, _, _)
+.
+
+can_move(Turn, queen, C, L, Board, C2, L2) :-
+  can_move(Turn, queen, C, L, Board, C2, L2, _, _, _)
+.
+
+can_move(Turn, king, C, L, Board, C2, L2) :-
+  can_move(Turn, king, C, L, Board, C2, L2, _)
+.
+
+% PREDICATES TO CHECK IF WE CAN MOVE A KING TO A SPECIFIC LOCATION
+% THERE ARE 8 WAYS TO MOVE A KING 
+% 1 - N, 2 - NE, 3 - E, 4 - SE, 5 - S, 6 - SW, 7 - W, 8 - NW
+can_move(Turn, king, C, L, Board, C, L2, 1) :-
+  up(L, L2),
+  empty(Board, C, L),
+  exists(Turn, king, Board, C, L2)
+.
+
+can_move(Turn, king, C, L, Board, C2, L2, 2) :-
+  up(L, L2),
+  up(C, C2),
+  empty(Board, C, L),
+  exists(Turn, king, Board, C2, L2)
+.
+
+can_move(Turn, king, C, L, Board, C2, L, 3) :-
+  up(C, C2),
+  empty(Board, C, L),
+  exists(Turn, king, Board, C2, L)
+.
+
+can_move(Turn, king, C, L, Board, C2, L2, 4) :-
+  up(L2, L),
+  up(C, C2),
+  empty(Board, C, L),
+  exists(Turn, king, Board, C2, L2)
+.
+
+can_move(Turn, king, C, L, Board, C, L2, 5) :-
+  up(L2, L),
+  empty(Board, C, L),
+  exists(Turn, king, Board, C, L2)
+.
+
+can_move(Turn, king, C, L, Board, C2, L2, 6) :-
+  up(L2, L),
+  up(C2, C),
+  empty(Board, C, L),
+  exists(Turn, king, Board, C2, L2)
+.
+
+can_move(Turn, king, C, L, Board, C2, L, 7) :-
+  up(C2, C),
+  empty(Board, C, L),
+  exists(Turn, king, Board, C2, L)
+.
+
+can_move(Turn, king, C, L, Board, C2, L2, 8) :-
+  up(C2, C),
+  up(L, L2),
+  empty(Board, C, L),
+  exists(Turn, king, Board, C2, L2)
+.
+
 
 % PREDICATES TO CHECK IF WE CAN MOVE A PAWN TO A SPECIFIC LOCATION
 % THERE ARE 2 TRIES FOR SIMPLE MOVES: ONE TO HANDLE ONE STEP FORWARD AND 
@@ -405,9 +497,87 @@ can_move(Turn, queen, C, L, Board, X, Y, 4, 2, 2) :-
 .
 
 
-% PREDICATES TO CHECK IF A KNIGHT CAN CAPTURE AT A SPECIFIC LOCATION
+% INTERFACE PREDICATES TO CAPTURE A PIECE NO MATTER THE STRATEGY
 can_capture(Turn, knight, C, L, Board, X, Y) :- 
   can_move(Turn, knight, C, L, Board, X, Y, _)
+.
+
+can_capture(Turn, rook, C, L, Board, X, Y) :- 
+  can_capture(Turn, rook, C, L, Board, X, Y, _, _)
+.
+
+can_capture(Turn, bishop, C, L, Board, X, Y) :- 
+  can_capture(Turn, bishop, C, L, Board, X, Y, _, _)
+.
+
+can_capture(Turn, queen, C, L, Board, X, Y) :- 
+  can_capture(Turn, queen, C, L, Board, X, Y, _, _, _)
+.
+
+can_capture(Turn, king, C, L, Board, X, Y) :- 
+  can_capture(Turn, king, C, L, Board, X, Y, _)
+.
+
+can_capture(Turn, pawn, C, L, Board, C2, L2) :-
+  up(L2, L),
+  adjacent(C, C2),
+  \+ empty(Board, C, L),
+  exists(Turn, pawn, Board, C2, L2)
+.
+
+% PREDICATES TO CHECK IF WE CAN CAPTURE WITH A KING
+% THERE ARE 8 WAYS TO CAPTURE WITH A KING 
+% 1 - N, 2 - NE, 3 - E, 4 - SE, 5 - S, 6 - SW, 7 - W, 8 - NW
+can_capture(Turn, king, C, L, Board, C, L2, 1) :-
+  up(L, L2),
+  \+ empty(Board, C, L),
+  exists(Turn, king, Board, C, L2)
+.
+
+can_capture(Turn, king, C, L, Board, C2, L2, 2) :-
+  up(L, L2),
+  up(C, C2),
+  \+ empty(Board, C, L),
+  exists(Turn, king, Board, C2, L2)
+.
+
+can_capture(Turn, king, C, L, Board, C2, L, 3) :-
+  up(C, C2),
+  \+ empty(Board, C, L),
+  exists(Turn, king, Board, C2, L)
+.
+
+can_capture(Turn, king, C, L, Board, C2, L2, 4) :-
+  up(L2, L),
+  up(C, C2),
+  \+ empty(Board, C, L),
+  exists(Turn, king, Board, C2, L2)
+.
+
+can_capture(Turn, king, C, L, Board, C, L2, 5) :-
+  up(L2, L),
+  \+ empty(Board, C, L),
+  exists(Turn, king, Board, C, L2)
+.
+
+can_capture(Turn, king, C, L, Board, C2, L2, 6) :-
+  up(L2, L),
+  up(C2, C),
+  \+ empty(Board, C, L),
+  exists(Turn, king, Board, C2, L2)
+.
+
+can_capture(Turn, king, C, L, Board, C2, L, 7) :-
+  up(C2, C),
+  \+ empty(Board, C, L),
+  exists(Turn, king, Board, C2, L)
+.
+
+can_capture(Turn, king, C, L, Board, C2, L2, 8) :-
+  up(C2, C),
+  up(L, L2),
+  \+ empty(Board, C, L),
+  exists(Turn, king, Board, C2, L2)
 .
 
 % PREDICATES TO CHECK IF A PAWN CAN CAPTURE AT A SPECIFIC LOCATION
@@ -639,37 +809,50 @@ can_capture(Turn, queen, C, L, Board, C2, L2, 4, 2, 2) :-
 % MOVE A PAWN
 make_move([C, L], Before, After, Turn) :-
   col_trans(C, NC),
-  can_move(Turn, pawn, NC, L, Before, X, Y, _),
-  move_piece(Turn, pawn, X, Y, NC, L, Before, After)
+  can_move(Turn, pawn, NC, L, Before, X, Y),
+  move_piece(Turn, pawn, X, Y, NC, L, Before, After),
+  \+ in_chess(After, _)
 .
 
 % MOVE A BISHOP
 make_move([bishop, C, L], Before, After, Turn) :-
   col_trans(C, NC),
-  can_move(Turn, bishop, NC, L, Before, X, Y, _, _),
-  move_piece(Turn, bishop, X, Y, NC, L, Before, After)
+  can_move(Turn, bishop, NC, L, Before, X, Y),
+  move_piece(Turn, bishop, X, Y, NC, L, Before, After),
+  \+ in_chess(After, _)
 .
 
 % MOVE A KNIGHT
 make_move([knight, C, L], Before, After, Turn) :-
   col_trans(C, NC),
   empty(Before, NC, L),
-  can_move(Turn, knight, NC, L, Before, X, Y, _),
-  move_piece(Turn, knight, X, Y, NC, L, Before, After)
+  can_move(Turn, knight, NC, L, Before, X, Y),
+  move_piece(Turn, knight, X, Y, NC, L, Before, After),
+  \+ in_chess(After, _)
 .
 
 % MOVE A ROOK
 make_move([rook, C, L], Before, After, Turn) :-
   col_trans(C, NC),
-  can_move(Turn, rook, NC, L, Before, X, Y, _, _),
-  move_piece(Turn, rook, X, Y, NC, L, Before, After)
+  can_move(Turn, rook, NC, L, Before, X, Y),
+  move_piece(Turn, rook, X, Y, NC, L, Before, After),
+  \+ in_chess(After, _)
 .
 
 % MOVE A QUEEN
 make_move([queen, C, L], Before, After, Turn) :-
   col_trans(C, NC),
-  can_move(Turn, queen, NC, L, Before, X, Y, _, _, _),
-  capture(Turn, queen, X, Y, NC, L, Before, After)
+  can_move(Turn, queen, NC, L, Before, X, Y),
+  capture(Turn, queen, X, Y, NC, L, Before, After),
+  \+ in_chess(After, _)
+.
+
+% MOVE A KING
+make_move([king, C, L], Before, After, Turn) :-
+  col_trans(C, NC),
+  can_move(Turn, king, NC, L, Before, X, Y),
+  capture(Turn, king, X, Y, NC, L, Before, After),
+  \+ in_chess(After, _)
 .
 
 
@@ -678,30 +861,94 @@ make_move([C, x, C2, L], Before, After, Turn) :-
   col_trans(C, NC),
   col_trans(C2, NC2),
   can_capture(Turn, pawn, NC, NC2, L, Before, X, Y),
-  capture(Turn, pawn, X, Y, NC2, L, Before, After)
+  capture(Turn, pawn, X, Y, NC2, L, Before, After),
+  \+ in_chess(After, _)
 .
 
 % CAPTURE WITH A KNIGHT
 make_move([knight, x, C, L], Before, After, Turn) :-
   col_trans(C, NC),
   can_capture(Turn, knight, NC, L, Before, X, Y),
-  capture(Turn, knight, X, Y, NC, L, Before, After)
+  capture(Turn, knight, X, Y, NC, L, Before, After),
+  \+ in_chess(After, _)
 .
 
 % CAPTURE WITH A ROOK
 make_move([rook, x, C, L], Before, After, Turn) :-
   col_trans(C, NC),
-  can_capture(Turn, rook, NC, L, Before, X, Y, _, _),
-  capture(Turn, rook, X, Y, NC, L, Before, After)
+  can_capture(Turn, rook, NC, L, Before, X, Y),
+  capture(Turn, rook, X, Y, NC, L, Before, After),
+  \+ in_chess(After, _)
+.
+
+% CAPTURE WITH A BISHOP
+make_move([bishop, x, C, L], Before, After, Turn) :-
+  col_trans(C, NC),
+  can_capture(Turn, bishop, NC, L, Before, X, Y),
+  capture(Turn, bishop, X, Y, NC, L, Before, After),
+  \+ in_chess(After, _)
 .
 
 % CAPTURE WITH A QUEEN
 make_move([queen, x, C, L], Before, After, Turn) :-
   col_trans(C, NC),
-  can_capture(Turn, queen, NC, L, Before, X, Y, _, _, _),
-  capture(Turn, queen, X, Y, NC, L, Before, After)
+  can_capture(Turn, queen, NC, L, Before, X, Y),
+  capture(Turn, queen, X, Y, NC, L, Before, After),
+  \+ in_chess(After, _)
 .
 
+% CAPTURE WITH A KING
+make_move([king, x, C, L], Before, After, Turn) :-
+  col_trans(C, NC),
+  can_capture(Turn, king, NC, L, Before, X, Y),
+  capture(Turn, king, X, Y, NC, L, Before, After),
+  \+ in_chess(After, _)
+.
+
+% CHESS WITH PAWN
+make_move([C, L, chess], Before, After, Turn) :-
+  col_trans(C, NC),
+  can_move(Turn, pawn, NC, L, Before, X, Y),
+  move_piece(Turn, pawn, X, Y, NC, L, Before, After),
+  opposite(Turn, Next),
+  in_chess(After, Next)
+.
+
+% CHESS WITH KNIGHT
+make_move([knight, C, L, chess], Before, After, Turn) :-
+  col_trans(C, NC),
+  can_move(Turn, knight, NC, L, Before, X, Y),
+  move_piece(Turn, knight, X, Y, NC, L, Before, After),
+  opposite(Turn, Next),
+  in_chess(After, Next)
+.
+
+% CHESS WITH ROOK
+make_move([rook, C, L, chess], Before, After, Turn) :-
+  col_trans(C, NC),
+  can_move(Turn, rook, NC, L, Before, X, Y),
+  move_piece(Turn, rook, X, Y, NC, L, Before, After),
+  opposite(Turn, Next),
+  in_chess(After, Next)
+.
+
+% CHESS WITH BISHOP
+make_move([bishop, C, L, chess], Before, After, Turn) :-
+  col_trans(C, NC),
+  can_move(Turn, bishop, NC, L, Before, X, Y),
+  move_piece(Turn, bishop, X, Y, NC, L, Before, After),
+  opposite(Turn, Next),
+  in_chess(After, Next)
+.
+
+% CHESS WITH QUEEN
+make_move([queen, C, L, chess], Before, After, Turn) :-
+  col_trans(C, NC),
+  can_move(Turn, queen, NC, L, Before, X, Y),
+  move_piece(Turn, queen, X, Y, NC, L, Before, After),
+  opposite(Turn, Next),
+  in_chess(After, Next)
+.
 
 % ITERATE THE LIST OF MOVES
 make_moves([], Before, Before, _).
